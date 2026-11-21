@@ -1,0 +1,16 @@
+{
+  "name": "arkham-adventure",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A gritty text adventure set in a lockdown Arkham Asylum (MERN + MVC)",
+  "scripts": {
+    "install:all": "npm install && npm install --prefix server && npm install --prefix client",
+    "seed": "npm run seed --prefix server",
+    "check": "npm run check --prefix server",
+    "dev": "concurrently -n api,web -c yellow,green \"npm run dev --prefix server\" \"npm run dev --prefix client\"",
+    "build": "npm run build --prefix client"
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.0"
+  }
+}
