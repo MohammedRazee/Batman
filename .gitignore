@@ -1,4 +1,22 @@
-CLAUDE.md
-Project_Batman.md
-node_modules
+node_modules/
+
+# env / secrets
 .env
+.env.*
+!.env.example
+
+# build output and logs
+dist/
+build/
+*.log
+npm-debug.log*
+
+# editor / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Claude Code local-only files
+.claude/settings.local.json
+CLAUDE.local.md
