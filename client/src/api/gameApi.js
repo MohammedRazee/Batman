@@ -24,7 +24,7 @@ const post = (path, body) => request(path, { method: 'POST', body: JSON.stringif
 export const gameApi = {
   newGame: (name) => post('/new', { name }),
   resume: (id) => request(`/${id}`),
-  choose: (id, choiceId) => post(`/${id}/choose`, { choiceId }),
+  choose: (id, choiceId, timedOut) => post(`/${id}/choose`, { choiceId, timedOut }),
   setDetective: (id, on) => post(`/${id}/detective`, { on }),
   getRiddle: (id, riddleId) => request(`/${id}/riddle/${riddleId}`),
   answerRiddle: (id, riddleId, answer) => post(`/${id}/riddle/${riddleId}`, { answer }),

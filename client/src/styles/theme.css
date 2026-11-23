@@ -289,3 +289,37 @@ kbd {
   .trophy, .trophy.claimed, .riddle-modal.shake, .riddle-modal.accepted { animation: none; }
   .trophy { transition: none; }
 }
+
+/* ---------- Timed choices ---------- */
+.timer { margin-bottom: 0.4rem; }
+.timer-prompt { margin: 0 0 0.3rem; font-family: var(--font-display); letter-spacing: 0.3em; color: var(--blood); }
+.timer-bar { position: relative; height: 10px; border: 1px solid var(--line); background: #070909; }
+.timer-fill { height: 100%; background: var(--amber); transition: width 0.1s linear; }
+.timer-bar--urgent .timer-fill { background: var(--blood); }
+.timer-secs { position: absolute; right: 0; top: 12px; font-size: 0.8rem; letter-spacing: 0.15em; color: var(--fg-dim); }
+.timer-bar--urgent .timer-secs { color: var(--blood); }
+.hud--urgent { animation: hud-pulse 0.8s ease-in-out infinite; }
+
+.choice { position: relative; }
+.choice--dimmed { opacity: 0.25; filter: grayscale(1); transition: opacity 0.25s, filter 0.25s; pointer-events: none; }
+.choice--picked {
+  border-color: var(--amber); background: rgba(232, 169, 60, 0.1);
+  box-shadow: 0 0 18px rgba(232, 169, 60, 0.45);
+  animation: hang 1.1s ease-out 0.25s both;
+}
+.choice--default-flash { border-color: var(--blood); animation: default-flash 0.3s steps(1) 4; }
+.choice-tag--no-response { margin-left: auto; font-size: 0.75rem; letter-spacing: 0.2em; color: var(--blood); white-space: nowrap; }
+.setting { display: flex; flex-direction: column; gap: 0.3rem; margin-top: 1.5rem; font-size: 0.8rem; letter-spacing: 0.2em; color: var(--fg-dim); }
+.setting select { background: #0b0f0e; color: var(--fg); border: 1px solid var(--line); padding: 0.4em; font: inherit; letter-spacing: 0; }
+
+@keyframes hang { from { transform: translateY(0); } to { transform: translateY(-6px); } }
+@keyframes default-flash { 0% { background: rgba(240, 98, 90, 0.3); } 50% { background: transparent; } }
+@keyframes hud-pulse { 50% { box-shadow: inset 0 -3px 0 rgba(240, 98, 90, 0.6); } }
+
+/* Reduced motion: static highlight, same hold durations (they live in the hook). */
+@media (prefers-reduced-motion: reduce) {
+  .hud--urgent, .choice--picked, .choice--default-flash { animation: none; }
+  .choice--picked { transform: translateY(-3px); }
+  .choice--default-flash { background: rgba(240, 98, 90, 0.3); }
+  .timer-fill, .choice--dimmed { transition: none; }
+}

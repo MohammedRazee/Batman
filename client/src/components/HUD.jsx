@@ -12,10 +12,10 @@ function Meter({ label, value, kind }) {
   );
 }
 
-export default function HUD({ view, onToggleDetective, onTogglePanel, panelOpen, onQuit, busy }) {
+export default function HUD({ view, onToggleDetective, onTogglePanel, panelOpen, onQuit, busy, locked, urgent }) {
   const { hud, scene, name } = view;
   return (
-    <header className="hud">
+    <header className={`hud ${urgent ? 'hud--urgent' : ''}`}>
       <div className="hud-loc">
         <span className="loc-area">{scene.area}</span>
         <span className="loc-sub">OPERATIVE: {name}</span>
@@ -29,13 +29,13 @@ export default function HUD({ view, onToggleDetective, onTogglePanel, panelOpen,
         <button
           className={`btn toggle ${hud.detectiveMode ? 'on' : ''}`}
           onClick={onToggleDetective}
-          disabled={busy || !!view.ending}
+          disabled={busy || locked || !!view.ending}
           aria-pressed={hud.detectiveMode}
           title="Toggle Detective Mode (D)"
         >
           DETECTIVE <kbd>D</kbd>
         </button>
-        <button className={`btn toggle ${panelOpen ? 'on' : ''}`} onClick={onTogglePanel} aria-pressed={panelOpen} title="Gear and Case Journal (I)">
+        <button className={`btn toggle ${panelOpen ? 'on' : ''}`} disabled={locked} onClick={onTogglePanel} aria-pressed={panelOpen} title="Gear and Case Journal (I)">
           FILE <kbd>I</kbd>
         </button>
         <button className="btn ghost" onClick={onQuit} title="Leave the case. You can resume later.">

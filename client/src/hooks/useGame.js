@@ -63,10 +63,13 @@ export function useGame() {
       }
     });
 
-  const choose = (choiceId) =>
+  // defer: return the new view instead of showing it, so a timed scene can finish its hold first.
+  const choose = (choiceId, { timedOut = false, defer = false } = {}) =>
     run(async () => {
       setNotice(null);
-      setView(await gameApi.choose(view.playerId, choiceId));
+      const v = await gameApi.choose(view.playerId, choiceId, timedOut);
+      if (!defer) setView(v);
+      return v;
     });
 
   const toggleDetective = () =>
@@ -102,5 +105,5 @@ export function useGame() {
     return () => clearTimeout(t);
   }, [notice]);
 
-  return { view, saved, busy, error, notice, start, resume, choose, toggleDetective, useItem, getRiddle, answerRiddle, quit, forget };
+  return { view, saved, busy, error, notice, start, resume, choose, toggleDetective, useItem, getRiddle, answerRiddle, quit, showView: setView, forget };
 }

@@ -56,4 +56,6 @@ Add objects to `server/data/scenes/*.js`, then `npm run seed`. A choice supports
 - `detective: true` only appears in Detective Mode
 - `effects: [{type: 'health'|'alert'|'setAlert'|'addItem'|'removeItem'|'flag'|'inc'|'journal', ...}]`
 
+Timed scenes: `timed: { seconds, defaultChoice, prompt }` (default must have no `requires`/`hideIf`/`detective`). The `Scene` schema needs the field, then `npm run seed`.
+
 Scene-level: `onEnter` (first visit only unless `repeat: true`), `detectiveText`, `clue`, `ending`. `{{name}}` in text is replaced with the player's name.

@@ -7,7 +7,7 @@ const entry = (j) => (
   </li>
 );
 
-export default function SidePanel({ hud, onUse, busy, open, onClose }) {
+export default function SidePanel({ hud, onUse, busy, open, onClose, timerScale, onTimerScale }) {
   const [tab, setTab] = useState('gear');
   return (
     <aside className={`side-panel ${open ? 'open' : ''}`} aria-hidden={!open}>
@@ -48,6 +48,14 @@ export default function SidePanel({ hud, onUse, busy, open, onClose }) {
           {hud.journal.filter((j) => j.section === 'enigma').map(entry)}
         </ul>
       )}
+      <label className="setting">
+        TIMED CHOICES
+        <select value={timerScale} onChange={(e) => onTimerScale(e.target.value)}>
+          <option value="normal">Normal</option>
+          <option value="1.5">Relaxed (x1.5)</option>
+          <option value="off">Off (never expires)</option>
+        </select>
+      </label>
     </aside>
   );
 }
