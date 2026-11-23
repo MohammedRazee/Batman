@@ -1,6 +1,7 @@
 export default [
   {
     id: 'cell_01',
+    trophy: { riddleId: 'tr_cell_cell', x: 24, y: 34 },
     area: 'Cell Block',
     title: 'Cell Block C',
     text: `A row of cages in an old building that has pretended to be a hospital too long. Most of the doors are open. One is not.
@@ -55,6 +56,7 @@ The service stairs at the back go up to the Tower.`,
   },
   {
     id: 'mansion_02',
+    trophy: { riddleId: 'tr_records_file', x: 75, y: 30 },
     area: 'Mansion',
     title: 'The Ledger',
     text: `Columns of names, in a doctor's neat hand. Ward. Admission. Condition. Under Condition, almost every entry says the same thing: Cured.

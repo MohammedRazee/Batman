@@ -62,6 +62,7 @@ The pearls stop falling. You realise you are holding your breath, and that the a
   },
   {
     id: 'garden_04',
+    trophy: { riddleId: 'tr_garden_vine', x: 80, y: 35 },
     area: 'Botanical Gardens',
     title: 'The Greenhouse',
     text: `The alley folds away like a bad photograph. You are on your knees on a mosaic floor, in a greenhouse full of heavy white blooms.

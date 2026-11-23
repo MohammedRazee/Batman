@@ -9,9 +9,11 @@ const playerSchema = new mongoose.Schema(
     inventory: { type: [String], default: [] },
     flags: { type: mongoose.Schema.Types.Mixed, default: {} },
     journal: {
-      type: [{ id: String, title: String, text: String, _id: false }],
+      type: [{ id: String, title: String, text: String, section: String, _id: false }],
       default: [],
     },
+    trophies: { type: [String], default: [] },
+    riddleTries: { type: mongoose.Schema.Types.Mixed, default: {} },
     visited: { type: [String], default: [] },
     returnTo: { type: String, default: null },
     detectiveMode: { type: Boolean, default: false },

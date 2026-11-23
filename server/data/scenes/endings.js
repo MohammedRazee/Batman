@@ -12,7 +12,7 @@ By dawn the island is quiet. The patients are on boats to a real hospital. The c
 The sun comes up over the water. It is grey, and thin, and it is not nothing.
 
 Case file: {{name}}. Closed.`,
-    ending: { id: 'justice', title: 'CASE CLOSED' },
+    ending: { id: 'justice', title: 'CASE CLOSED', epilogue: { trophies: "Eight enigmas, eight answers. Somewhere on the mainland a man in a green suit sends you a single line: 'Well played.' TODO(author)" } },
     choices: [],
   },
   {
@@ -28,7 +28,7 @@ The doctor and the committee are alive. By morning there will be lawyers and a s
 The island is still standing. So is everything it was built to hide.
 
 Case file: {{name}}. Closed, but not finished.`,
-    ending: { id: 'pyrrhic', title: 'THE LONG NIGHT' },
+    ending: { id: 'pyrrhic', title: 'THE LONG NIGHT', epilogue: { trophies: "A package arrives with no return address. Inside, eight green question marks and a note: 'You saw everything. Pity about the rest.' TODO(author)" } },
     choices: [],
   },
   {
@@ -44,7 +44,7 @@ The harbour patrol finds you on the rocks at dawn, soaked, unhurt, and not talki
 Nobody finds the ledger. Nobody finds the tape. Nobody finds the names.
 
 Case file: {{name}}. Nothing left to open.`,
-    ending: { id: 'dark', title: 'ASHES' },
+    ending: { id: 'dark', title: 'ASHES', epilogue: { trophies: "Among the embers, one thing survives: a green question mark, scorched but unbroken. Eight riddles solved. No one left to tell. TODO(author)" } },
     choices: [],
   },
   {

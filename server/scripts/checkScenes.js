@@ -1,6 +1,7 @@
 // Static validation of the scene graph. Run: npm run check
 import scenes from '../data/scenes/index.js';
 import ITEMS from '../data/items.js';
+import { riddles } from '../data/riddles.js';
 
 const EFFECTS = new Set(['health', 'alert', 'setAlert', 'addItem', 'removeItem', 'flag', 'inc', 'journal']);
 const byId = new Map();
@@ -42,6 +43,18 @@ for (const s of scenes) {
     }
   });
 }
+
+const usedRiddles = new Map();
+for (const s of scenes) {
+  if (!s.trophy) continue;
+  const { riddleId, x, y } = s.trophy;
+  if (!riddles[riddleId]) errors.push(`${s.id}: unknown riddle ${riddleId}`);
+  if (usedRiddles.has(riddleId)) errors.push(`riddle ${riddleId} used twice`);
+  usedRiddles.set(riddleId, s.id);
+  if (s.ending || s.id === 'ambush' || s.id === 'game_over') errors.push(`${s.id}: trophy not allowed in ambush/death/ending`);
+  if (![x, y].every((n) => Number.isFinite(n) && n >= 0 && n <= 100)) errors.push(`${s.id}: trophy x/y must be 0-100`);
+}
+for (const id of Object.keys(riddles)) if (!usedRiddles.has(id)) errors.push(`riddle ${id} is not placed in any scene`);
 
 for (const f of usedFlags) if (!setFlags.has(f)) errors.push(`flag "${f}" is checked but never set`);
 

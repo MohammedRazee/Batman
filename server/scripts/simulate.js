@@ -2,6 +2,7 @@
 // 1) a scripted "golden path" that must reach the best ending
 // 2) thousands of random playthroughs that must never dead-end
 import * as engine from '../services/engine.js';
+import { riddles } from '../data/riddles.js';
 import scenes from '../data/scenes/index.js';
 
 const byId = new Map(scenes.map((s) => [s.id, s]));
@@ -18,6 +19,8 @@ const newPlayer = () => ({
   visited: [],
   returnTo: null,
   detectiveMode: false,
+  trophies: [],
+  riddleTries: {},
   over: false,
 });
 
@@ -108,6 +111,13 @@ async function randomRuns(n) {
       if (rand() < 0.15) {
         p.detectiveMode = !p.detectiveMode;
         engine.collectClue(p, s);
+      }
+      if (s.trophy && p.detectiveMode && rand() < 0.5) {
+        const id = s.trophy.riddleId;
+        const res = engine.answerRiddle(p, id, rand() < 0.5 ? 'zzz' : riddles[id].answers[0]);
+        if (res.correct !== p.trophies.includes(id)) throw new Error(`run ${i}: riddle state mismatch at ${s.id}`);
+        const view = JSON.stringify(engine.buildView(p, s));
+        if (!p.trophies.includes(id) && riddles[id].answers.some((a) => view.includes(`"${a}"`))) throw new Error(`answer leaked in view at ${s.id}`);
       }
       const { choices } = engine.listChoices(p, s);
       const open = choices.filter((c) => !c.locked);

@@ -1,6 +1,7 @@
 // Game engine: pure rules, no HTTP and no database.
 // Works on a player-shaped object (a plain object or a Mongoose document).
 import ITEMS from '../data/items.js';
+import { riddles } from '../data/riddles.js';
 
 const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
 
@@ -62,7 +63,7 @@ function listChoices(player, scene) {
 
 function addJournal(player, entry) {
   if (!entry || player.journal.some((j) => j.id === entry.id)) return false;
-  player.journal.push({ id: entry.id, title: entry.title, text: entry.text });
+  player.journal.push({ id: entry.id, title: entry.title, text: entry.text, section: entry.section });
   return true;
 }
 
@@ -156,6 +157,65 @@ function useItem(player, itemId) {
   return { message: item.use.message };
 }
 
+/* ---------- riddles ---------- */
+
+const TROPHY_TOTAL = Object.keys(riddles).length;
+
+// lowercase, strip accents/punctuation, collapse spaces, drop a leading article
+export function normalizeAnswer(s) {
+  return String(s ?? '')
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase().replace(/[^a-z0-9\s]/g, ' ')
+    .replace(/\s+/g, ' ').trim()
+    .replace(/^(a|an|the) /, '');
+}
+
+// shortcut: no fuzzy matching, add edit-distance 1 if players complain about typos
+export function checkRiddle(riddle, answer) {
+  const n = normalizeAnswer(answer);
+  if (!n) return false;
+  const accepted = riddle.answers.map(normalizeAnswer);
+  return accepted.includes(n) || accepted.includes(n.replace(/s$/, ''));
+}
+
+// Returns { error, status } if the trophy is not usable right now, else { riddle }.
+export function openRiddle(player, scene, riddleId) {
+  if (!player.detectiveMode || !scene.trophy || scene.trophy.riddleId !== riddleId || !riddles[riddleId]) {
+    return { error: 'No signal here.', status: 403 };
+  }
+  return { riddle: riddles[riddleId] };
+}
+
+export function riddleState(player, riddleId) {
+  const riddle = riddles[riddleId];
+  const claimed = player.trophies.includes(riddleId);
+  const tries = player.riddleTries[riddleId] || 0;
+  return {
+    riddleId,
+    text: riddle.text,
+    claimed,
+    tries,
+    hint: tries >= 2 || claimed ? riddle.hint : undefined,
+    // the answer is only revealed once solved (recap)
+    answer: claimed ? riddle.answers[0] : undefined,
+  };
+}
+
+export function answerRiddle(player, riddleId, answer) {
+  const riddle = riddles[riddleId];
+  const progress = () => ({ claimed: player.trophies.length, total: TROPHY_TOTAL });
+  if (player.trophies.includes(riddleId)) return { correct: true, tries: player.riddleTries[riddleId] || 0, trophyProgress: progress() };
+  if (checkRiddle(riddle, answer)) {
+    player.trophies.push(riddleId);
+    const entry = { id: riddleId, ...riddle.journal, section: 'enigma' };
+    addJournal(player, entry);
+    return { correct: true, tries: player.riddleTries[riddleId] || 0, journalEntry: entry, trophyProgress: progress() };
+  }
+  const tries = (player.riddleTries[riddleId] || 0) + 1;
+  player.riddleTries[riddleId] = tries;
+  return { correct: false, tries, hint: tries >= 2 ? riddle.hint : undefined, trophyProgress: progress() };
+}
+
 /* ---------- view model ---------- */
 
 const withName = (player, str) => (str ? str.replace(/\{\{name\}\}/g, player.name) : str);
@@ -163,6 +223,8 @@ const withName = (player, str) => (str ? str.replace(/\{\{name\}\}/g, player.nam
 function buildView(player, scene, extra = {}) {
   const { choices, detectiveHidden } = listChoices(player, scene);
   const detective = !!player.detectiveMode;
+  const claimed = !!scene.trophy && player.trophies.includes(scene.trophy.riddleId);
+  const hasHiddenTrophy = !detective && !!scene.trophy && !claimed;
   return {
     playerId: String(player._id || player.id || ''),
     name: player.name,
@@ -171,10 +233,13 @@ function buildView(player, scene, extra = {}) {
       area: scene.area,
       title: scene.title,
       text: withName(player, scene.text),
+      trophy: detective && scene.trophy ? { ...scene.trophy, claimed } : null,
       detectiveText: detective ? withName(player, scene.detectiveText) || null : null,
     },
     choices: scene.ending ? [] : choices,
-    detectiveHint: !detective && (detectiveHidden > 0 || !!scene.detectiveText),
+    detectiveHint: !detective && (detectiveHidden > 0 || !!scene.detectiveText || hasHiddenTrophy),
+    hasHiddenTrophy,
+    trophyProgress: { claimed: player.trophies.length, total: TROPHY_TOTAL },
     hud: {
       health: player.health,
       alert: player.alert,
@@ -185,9 +250,11 @@ function buildView(player, scene, extra = {}) {
         desc: ITEMS[id] ? ITEMS[id].desc : '',
         usable: !!(ITEMS[id] && ITEMS[id].usable),
       })),
-      journal: player.journal.map((j) => ({ id: j.id, title: j.title, text: j.text })),
+      journal: player.journal.map((j) => ({ id: j.id, title: j.title, text: j.text, section: j.section })),
     },
-    ending: scene.ending || null,
+    ending: scene.ending
+      ? { id: scene.ending.id, title: scene.ending.title, died: scene.ending.died, epilogue: player.trophies.length === TROPHY_TOTAL ? scene.ending.epilogue?.trophies : undefined }
+      : null,
     ...extra,
   };
 }

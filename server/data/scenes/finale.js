@@ -1,6 +1,7 @@
 export default [
   {
     id: 'finale_01',
+    trophy: { riddleId: 'tr_finale_shadow', x: 22, y: 28 },
     area: 'The Tower',
     title: "The Tower: Joker's Stage",
     text: `A vast room under a dome of iron and broken glass. The rain comes in through the roof and runs down the walls in sheets. Under it, someone has set a stage.

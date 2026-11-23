@@ -8,7 +8,7 @@
     "start": "node server.js",
     "dev": "node --watch server.js",
     "seed": "node data/seed.js",
-    "check": "node scripts/checkScenes.js && node scripts/simulate.js"
+    "check": "node scripts/checkScenes.js && node --test test/*.test.js && node scripts/simulate.js"
   },
   "dependencies": {
     "cors": "^2.8.5",

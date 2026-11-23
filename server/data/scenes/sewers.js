@@ -41,6 +41,7 @@ The tunnel splits ahead into a wide pool and a rusted iron catwalk.`,
   },
   {
     id: 'sewers_03',
+    trophy: { riddleId: 'tr_sewer_echo', x: 18, y: 40 },
     area: 'Sewers',
     title: 'The Ladder',
     text: `A rusted ladder climbs into the dark. Behind you the water churns, then stills, and a long way off something huffs a breath that you feel in your teeth.

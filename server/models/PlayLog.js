@@ -11,6 +11,7 @@ const playLogSchema = new mongoose.Schema(
     endingId: String,
     choicesMade: { type: Number, default: 0 },
     lastScene: String,
+    trophiesSolved: { type: Number, default: 0 },
   },
   { timestamps: true }
 );

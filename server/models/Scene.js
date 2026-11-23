@@ -19,6 +19,7 @@ const sceneSchema = new mongoose.Schema({
   title: { type: String, required: true },
   text: { type: String, required: true },
   detectiveText: String,
+  trophy: { type: mongoose.Schema.Types.Mixed, default: undefined },
   clue: { type: mongoose.Schema.Types.Mixed, default: undefined },
   onEnter: { type: [mongoose.Schema.Types.Mixed], default: [] },
   repeat: { type: Boolean, default: false },

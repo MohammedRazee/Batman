@@ -69,6 +69,7 @@ Two men hold the door at the end, rifles low, nerves high. One of them keeps mut
   },
   {
     id: 'medical_04',
+    trophy: { riddleId: 'tr_extra_bat', x: 78, y: 22 },
     area: 'Medical Wing',
     title: 'Maintenance Crawlway',
     text: `A low corridor behind the walls. Pipes sweat. Wires hang like old veins.
@@ -87,6 +88,7 @@ In a gap behind a pipe, someone left a first-aid kit. Dusty, but sealed.`,
   },
   {
     id: 'medical_05',
+    trophy: { riddleId: 'tr_medical_syringe', x: 20, y: 30 },
     area: 'Medical Wing',
     title: "The Doctor's Office",
     text: `A good desk in a bad building. Lamp, blotter, a framed certificate with the name scraped off. The window looks out at the black water and the lights of the city, very far away.

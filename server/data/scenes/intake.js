@@ -23,6 +23,7 @@ The doors groan open. Floodlights. Guards with shotguns and tired faces. Cold ai
   },
   {
     id: 'intake_02',
+    trophy: { riddleId: 'tr_intake_clock', x: 72, y: 38 },
     area: 'Intake',
     title: 'The Long Corridor',
     text: `Fluorescent tubes buzz over the corridor. Somewhere above you a generator coughs, and the lights go out.

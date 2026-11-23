@@ -34,6 +34,7 @@ async function loadPlayer(req, res) {
 
 async function persist(player) {
   player.markModified('flags');
+  player.markModified('riddleTries');
   await player.save();
 }
 
@@ -119,4 +120,29 @@ export const useItem = async (req, res) => {
   await persist(player);
   await syncLog(player, scene, false);
   res.json(engine.buildView(player, scene, { message: result.message }));
+};
+
+// GET /api/game/:playerId/riddle/:riddleId
+export const getRiddle = async (req, res) => {
+  const player = await loadPlayer(req, res);
+  if (!player) return;
+  const opened = engine.openRiddle(player, await getScene(player.scene), req.params.riddleId);
+  if (opened.error) return res.status(opened.status).json({ error: opened.error });
+  res.json(engine.riddleState(player, req.params.riddleId));
+};
+
+// POST /api/game/:playerId/riddle/:riddleId  { answer }
+export const postRiddle = async (req, res) => {
+  const player = await loadPlayer(req, res);
+  if (!player) return;
+  const { riddleId } = req.params;
+  const opened = engine.openRiddle(player, await getScene(player.scene), riddleId);
+  if (opened.error) return res.status(opened.status).json({ error: opened.error });
+  const answer = String((req.body && req.body.answer) ?? '').slice(0, 100);
+  const result = engine.answerRiddle(player, riddleId, answer);
+  await persist(player);
+  if (result.journalEntry && player.logId) {
+    await PlayLog.findByIdAndUpdate(player.logId, { $set: { trophiesSolved: player.trophies.length } });
+  }
+  res.json(result);
 };
