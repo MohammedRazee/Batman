@@ -17,6 +17,7 @@ A smell that is not just sewage. Wet fur. Rotten meat. Something that has been h
   },
   {
     id: 'sewers_02',
+    timed: { seconds: 5, defaultChoice: 1, prompt: "IT'S COMING." },
     area: 'Sewers',
     title: 'Something in the Water',
     text: `The lamp flickers. The water in front of you rises, very slightly, in a slow wave.

@@ -11,6 +11,7 @@ const playLogSchema = new mongoose.Schema(
     endingId: String,
     choicesMade: { type: Number, default: 0 },
     lastScene: String,
+    choices: { type: [{ scene: String, choiceId: String, timedOut: Boolean, _id: false }], default: [] },
     trophiesSolved: { type: Number, default: 0 },
   },
   { timestamps: true }

@@ -44,6 +44,16 @@ for (const s of scenes) {
   });
 }
 
+for (const s of scenes) {
+  if (!s.timed) continue;
+  const { seconds, defaultChoice } = s.timed;
+  const d = (s.choices || [])[defaultChoice];
+  if (!d) errors.push(`${s.id}: timed.defaultChoice ${defaultChoice} does not exist`);
+  else if (d.requires || d.hideIf || d.detective) errors.push(`${s.id}: timed default choice must be always available`);
+  if (!(seconds >= 3 && seconds <= 15)) errors.push(`${s.id}: timed.seconds must be 3-15`);
+  if (s.ending || s.id.startsWith('garden_')) errors.push(`${s.id}: timed not allowed here`);
+}
+
 const usedRiddles = new Map();
 for (const s of scenes) {
   if (!s.trophy) continue;

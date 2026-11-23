@@ -136,7 +136,10 @@ async function enterScene(player, sceneId, getScene, depth = 0) {
 }
 
 // Returns { error } or { target } after applying the choice's effects.
-function resolveChoice(player, scene, choiceId) {
+// timedOut is reported by the client, so a determined player could stall.
+// shortcut: no server-side clock, acceptable for single-player; add a deadline in the Player doc if it matters.
+function resolveChoice(player, scene, choiceId, timedOut = false) {
+  if (timedOut && (!scene.timed || choiceId !== `c${scene.timed.defaultChoice}`)) return { error: 'Nothing timed out here.' };
   const idx = Number(String(choiceId).replace(/^c/, ''));
   const choice = Number.isInteger(idx) ? (scene.choices || [])[idx] : null;
   if (!choice) return { error: 'No such choice.' };
@@ -237,6 +240,7 @@ function buildView(player, scene, extra = {}) {
       detectiveText: detective ? withName(player, scene.detectiveText) || null : null,
     },
     choices: scene.ending ? [] : choices,
+    timed: scene.timed && !scene.ending ? { seconds: scene.timed.seconds, defaultChoiceId: `c${scene.timed.defaultChoice}`, prompt: scene.timed.prompt } : null,
     detectiveHint: !detective && (detectiveHidden > 0 || !!scene.detectiveText || hasHiddenTrophy),
     hasHiddenTrophy,
     trophyProgress: { claimed: player.trophies.length, total: TROPHY_TOTAL },

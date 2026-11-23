@@ -123,7 +123,13 @@ async function randomRuns(n) {
       const open = choices.filter((c) => !c.locked);
       if (!open.length) throw new Error(`run ${i}: dead end at ${s.id} (no unlocked choices)`);
       const pick = open[Math.floor(rand() * open.length)];
-      const r = engine.resolveChoice(p, s, pick.id);
+      const timedOut = !!s.timed && rand() < 0.25;
+      const choiceId = timedOut ? `c${s.timed.defaultChoice}` : pick.id;
+      if (s.timed) {
+        const other = open.find((c) => c.id !== `c${s.timed.defaultChoice}`);
+        if (other && !engine.resolveChoice(p, s, other.id, true).error) throw new Error(`timedOut accepted a non-default at ${s.id}`);
+      } else if (!engine.resolveChoice(p, s, pick.id, true).error) throw new Error(`timedOut accepted on untimed ${s.id}`);
+      const r = engine.resolveChoice(p, s, choiceId, timedOut);
       if (r.error) throw new Error(`run ${i}: ${s.id} offered ${pick.id} but resolve said ${r.error}`);
       s = await engine.enterScene(p, r.target, getScene);
       unseen.delete(s.id);

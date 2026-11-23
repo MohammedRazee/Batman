@@ -31,6 +31,7 @@ Wires run down the wall behind the stage. Wires lead to small black boxes. The b
   },
   {
     id: 'finale_02',
+    timed: { seconds: 8, defaultChoice: 1, prompt: 'BREATHE.' },
     area: 'The Tower',
     title: 'The Gas',
     text: `"I thought we'd do a little audience participation," the prisoner says, and pulls a lever.
@@ -48,6 +49,7 @@ Your eyes sting. The room tilts. The doctor, bound in his chair, begins to screa
   },
   {
     id: 'finale_03',
+    timed: { seconds: 8, defaultChoice: 1, prompt: 'NOW.' },
     area: 'The Tower',
     title: 'Last Move',
     text: `The gas thins. The stage is a ring of light and you stand in the middle of it.

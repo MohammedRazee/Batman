@@ -41,7 +41,10 @@ async function persist(player) {
 async function syncLog(player, scene, choiceMade) {
   if (!player.logId) return;
   const update = { $set: { lastScene: scene.id } };
-  if (choiceMade) update.$inc = { choicesMade: 1 };
+  if (choiceMade) {
+    update.$inc = { choicesMade: 1 };
+    update.$push = { choices: choiceMade };
+  }
   if (scene.ending) {
     update.$set.outcome = scene.ending.died ? 'died' : 'ending';
     update.$set.endingId = scene.ending.id;
@@ -85,12 +88,14 @@ export const choose = async (req, res) => {
   if (player.over) return res.status(409).json({ error: 'This case is closed.' });
 
   const current = await getScene(player.scene);
-  const result = engine.resolveChoice(player, current, req.body && req.body.choiceId);
+  const choiceId = req.body && req.body.choiceId;
+  const timedOut = !!req.body && req.body.timedOut === true;
+  const result = engine.resolveChoice(player, current, choiceId, timedOut);
   if (result.error) return res.status(400).json({ error: result.error });
 
   const next = await engine.enterScene(player, result.target, getScene);
   await persist(player);
-  await syncLog(player, next, true);
+  await syncLog(player, next, { scene: current.id, choiceId, timedOut });
   res.json(engine.buildView(player, next));
 };
 

@@ -1,6 +1,7 @@
 export default [
   {
     id: 'cell_01',
+    timed: { seconds: 6, defaultChoice: 1, prompt: 'DECIDE.' },
     trophy: { riddleId: 'tr_cell_cell', x: 24, y: 34 },
     area: 'Cell Block',
     title: 'Cell Block C',

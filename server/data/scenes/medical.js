@@ -25,6 +25,7 @@ The ward doors are across the atrium. To your left, a vent grille hangs a little
   },
   {
     id: 'medical_02',
+    timed: { seconds: 6, defaultChoice: 1, prompt: 'MOVE.' },
     area: 'Medical Wing',
     title: 'Ceiling Vent',
     text: `The vent smells of dust and old breath. Through the grille the guards are two pale discs of scalp, and their conversation drifts up to you.
@@ -35,7 +36,9 @@ The ward doors are across the atrium. To your left, a vent grille hangs a little
 
 "They're not supposed to."
 
-A pause. Then a laugh with no humour in it. "The Doctor's special treatment."`,
+A pause. Then a laugh with no humour in it. "The Doctor's special treatment."
+
+Under your knees the duct bracket groans, and a rivet pings loose. The whole run is about to drop. TODO(author)`,
     detectiveText: `Dried fluid on the duct floor. Not water. Someone has been dragged through here, and not recently.`,
     choices: [
       { label: 'Drop on the nearest guard.', goto: 'medical_05', effects: [{ type: 'alert', delta: 10 }, { type: 'health', delta: -5 }] },
