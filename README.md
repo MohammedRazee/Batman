@@ -23,6 +23,7 @@ npm run dev                # API on :5000, client on http://localhost:5173
 | `Space` / `Enter` | Skip the typewriter |
 | `D` | Toggle Detective Mode |
 | `I` | Open Gear / Journal |
+| `T` | Open the Riddler trophy riddle (Detective Mode, trophy present) |
 
 ## Layout (MVC)
 
