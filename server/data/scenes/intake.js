@@ -1,4 +1,4 @@
-module.exports = [
+export default [
   {
     id: 'intake_01',
     area: 'Intake',

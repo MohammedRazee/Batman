@@ -1,4 +1,4 @@
-module.exports = [
+export default [
   {
     id: 'medical_01',
     area: 'Medical Wing',

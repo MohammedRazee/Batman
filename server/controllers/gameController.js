@@ -1,8 +1,8 @@
-const mongoose = require('mongoose');
-const Player = require('../models/Player');
-const Scene = require('../models/Scene');
-const PlayLog = require('../models/PlayLog');
-const engine = require('../services/engine');
+import mongoose from 'mongoose';
+import Player from '../models/Player.js';
+import Scene from '../models/Scene.js';
+import PlayLog from '../models/PlayLog.js';
+import * as engine from '../services/engine.js';
 
 const START_SCENE = 'intake_01';
 const START_ITEMS = ['batarang'];
@@ -50,7 +50,7 @@ async function syncLog(player, scene, choiceMade) {
 }
 
 // POST /api/game/new  { name }
-exports.newGame = async (req, res) => {
+export const newGame = async (req, res) => {
   const name = cleanName(req.body && req.body.name);
   if (!name) return res.status(400).json({ error: 'A name is required for the case file.' });
 
@@ -70,7 +70,7 @@ exports.newGame = async (req, res) => {
 };
 
 // GET /api/game/:playerId  (resume)
-exports.getGame = async (req, res) => {
+export const getGame = async (req, res) => {
   const player = await loadPlayer(req, res);
   if (!player) return;
   const scene = await getScene(player.scene);
@@ -78,7 +78,7 @@ exports.getGame = async (req, res) => {
 };
 
 // POST /api/game/:playerId/choose  { choiceId }
-exports.choose = async (req, res) => {
+export const choose = async (req, res) => {
   const player = await loadPlayer(req, res);
   if (!player) return;
   if (player.over) return res.status(409).json({ error: 'This case is closed.' });
@@ -94,7 +94,7 @@ exports.choose = async (req, res) => {
 };
 
 // POST /api/game/:playerId/detective  { on?: boolean }
-exports.toggleDetective = async (req, res) => {
+export const toggleDetective = async (req, res) => {
   const player = await loadPlayer(req, res);
   if (!player) return;
   const on = req.body && typeof req.body.on === 'boolean' ? req.body.on : !player.detectiveMode;
@@ -106,7 +106,7 @@ exports.toggleDetective = async (req, res) => {
 };
 
 // POST /api/game/:playerId/use  { itemId }
-exports.useItem = async (req, res) => {
+export const useItem = async (req, res) => {
   const player = await loadPlayer(req, res);
   if (!player) return;
   if (player.over) return res.status(409).json({ error: 'This case is closed.' });

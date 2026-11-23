@@ -1,8 +1,8 @@
 // Runs the real engine over the real scenes with no database.
 // 1) a scripted "golden path" that must reach the best ending
 // 2) thousands of random playthroughs that must never dead-end
-const engine = require('../services/engine');
-const scenes = require('../data/scenes');
+import * as engine from '../services/engine.js';
+import scenes from '../data/scenes/index.js';
 
 const byId = new Map(scenes.map((s) => [s.id, s]));
 const getScene = async (id) => byId.get(id) || null;

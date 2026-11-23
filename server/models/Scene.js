@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 // Effects and requirements are free-form and interpreted by services/engine.js
 const choiceSchema = new mongoose.Schema(
@@ -26,4 +26,4 @@ const sceneSchema = new mongoose.Schema({
   ending: { type: mongoose.Schema.Types.Mixed, default: undefined },
 });
 
-module.exports = mongoose.model('Scene', sceneSchema);
+export default mongoose.model('Scene', sceneSchema);

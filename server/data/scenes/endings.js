@@ -1,4 +1,4 @@
-module.exports = [
+export default [
   {
     id: 'ending_justice',
     area: 'The Tower',

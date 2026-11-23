@@ -1,4 +1,4 @@
-module.exports = [
+export default [
   {
     id: 'finale_01',
     area: 'The Tower',

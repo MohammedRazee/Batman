@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 // One document per playthrough: "someone with this name played the game".
 const playLogSchema = new mongoose.Schema(
@@ -15,4 +15,4 @@ const playLogSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-module.exports = mongoose.model('PlayLog', playLogSchema);
+export default mongoose.model('PlayLog', playLogSchema);

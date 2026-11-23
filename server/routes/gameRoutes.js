@@ -1,5 +1,5 @@
-const express = require('express');
-const ctrl = require('../controllers/gameController');
+import express from 'express';
+import * as ctrl from '../controllers/gameController.js';
 
 const router = express.Router();
 
@@ -12,4 +12,4 @@ router.post('/:playerId/choose', wrap(ctrl.choose));
 router.post('/:playerId/detective', wrap(ctrl.toggleDetective));
 router.post('/:playerId/use', wrap(ctrl.useItem));
 
-module.exports = router;
+export default router;

@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const playerSchema = new mongoose.Schema(
   {
@@ -21,4 +21,4 @@ const playerSchema = new mongoose.Schema(
   { timestamps: true, minimize: false }
 );
 
-module.exports = mongoose.model('Player', playerSchema);
+export default mongoose.model('Player', playerSchema);

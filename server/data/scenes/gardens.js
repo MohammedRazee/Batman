@@ -1,4 +1,4 @@
-module.exports = [
+export default [
   {
     id: 'garden_01',
     area: 'Botanical Gardens',

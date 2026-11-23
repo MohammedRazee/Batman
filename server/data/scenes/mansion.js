@@ -1,4 +1,4 @@
-module.exports = [
+export default [
   {
     id: 'cell_01',
     area: 'Cell Block',

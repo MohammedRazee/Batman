@@ -1,6 +1,6 @@
 // Game engine: pure rules, no HTTP and no database.
 // Works on a player-shaped object (a plain object or a Mongoose document).
-const ITEMS = require('../data/items');
+import ITEMS from '../data/items.js';
 
 const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
 
@@ -192,7 +192,7 @@ function buildView(player, scene, extra = {}) {
   };
 }
 
-module.exports = {
+export {
   checkRequires,
   listChoices,
   applyEffects,

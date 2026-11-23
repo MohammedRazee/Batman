@@ -1,9 +1,13 @@
 // Usage: npm run seed   (wipes and reloads the Scene collection only)
-require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') });
-const mongoose = require('mongoose');
-const connectDB = require('../config/db');
-const Scene = require('../models/Scene');
-const scenes = require('./scenes');
+import dotenv from 'dotenv';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+dotenv.config({ path: path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '.env') });
+import mongoose from 'mongoose';
+import connectDB from '../config/db.js';
+import Scene from '../models/Scene.js';
+import scenes from './scenes/index.js';
 
 (async () => {
   try {

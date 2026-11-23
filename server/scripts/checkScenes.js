@@ -1,6 +1,6 @@
 // Static validation of the scene graph. Run: npm run check
-const scenes = require('../data/scenes');
-const ITEMS = require('../data/items');
+import scenes from '../data/scenes/index.js';
+import ITEMS from '../data/items.js';
 
 const EFFECTS = new Set(['health', 'alert', 'setAlert', 'addItem', 'removeItem', 'flag', 'inc', 'journal']);
 const byId = new Map();

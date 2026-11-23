@@ -1,5 +1,5 @@
 // Static item definitions. Players only store item ids.
-module.exports = {
+export default {
   batarang: {
     id: 'batarang',
     name: 'Batarang',
