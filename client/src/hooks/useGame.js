@@ -81,6 +81,14 @@ export function useGame() {
       setView(v);
     });
 
+  // Not wrapped in run(): the modal manages its own loading and errors.
+  const getRiddle = (riddleId) => gameApi.getRiddle(view.playerId, riddleId);
+  const answerRiddle = async (riddleId, answer) => {
+    const res = await gameApi.answerRiddle(view.playerId, riddleId, answer);
+    if (res.correct) setView(await gameApi.resume(view.playerId));
+    return res;
+  };
+
   const quit = () => {
     setView(null);
     setError(null);
@@ -94,5 +102,5 @@ export function useGame() {
     return () => clearTimeout(t);
   }, [notice]);
 
-  return { view, saved, busy, error, notice, start, resume, choose, toggleDetective, useItem, quit, forget };
+  return { view, saved, busy, error, notice, start, resume, choose, toggleDetective, useItem, getRiddle, answerRiddle, quit, forget };
 }

@@ -3,12 +3,16 @@ import HUD from '../components/HUD.jsx';
 import Narration from '../components/Narration.jsx';
 import ChoiceList from '../components/ChoiceList.jsx';
 import SidePanel from '../components/SidePanel.jsx';
+import TrophyIcon from '../components/TrophyIcon.jsx';
+import RiddleModal from '../components/RiddleModal.jsx';
 
 export default function GameScreen({ game }) {
-  const { view, busy, error, notice, choose, toggleDetective, useItem, quit, start } = game;
+  const { view, busy, error, notice, choose, toggleDetective, useItem, quit, start, getRiddle, answerRiddle } = game;
   const [typed, setTyped] = useState(false);
   const [panelOpen, setPanelOpen] = useState(false);
   const [fade, setFade] = useState(true);
+  const [riddleOpen, setRiddleOpen] = useState(false);
+  const trophy = view.scene.trophy;
 
   const onDone = useCallback(() => setTyped(true), []);
 
@@ -20,16 +24,19 @@ export default function GameScreen({ game }) {
     return () => clearTimeout(t);
   }, [view.scene.id]);
 
+  useEffect(() => setRiddleOpen(false), [view.scene.id]);
+
   useEffect(() => {
     const onKey = (e) => {
-      if (e.ctrlKey || e.metaKey || e.altKey || e.target instanceof HTMLInputElement) return;
+      if (riddleOpen || e.ctrlKey || e.metaKey || e.altKey || e.target instanceof HTMLInputElement) return;
       const k = e.key.toLowerCase();
       if (k === 'd' && !view.ending) toggleDetective();
       if (k === 'i') setPanelOpen((o) => !o);
+      if (k === 't' && trophy && typed) setRiddleOpen(true);
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [toggleDetective, view.ending]);
+  }, [toggleDetective, view.ending, riddleOpen, trophy, typed]);
 
   const ending = view.ending;
 
@@ -45,7 +52,18 @@ export default function GameScreen({ game }) {
       />
 
       <main className="stage">
-        <div className="scene-card">
+        <div className="scene-card scene-stage">
+          {typed && trophy && (
+            <button
+              className={`trophy ${trophy.claimed ? 'claimed' : ''}`}
+              style={{ left: `${trophy.x}%`, top: `${trophy.y}%` }}
+              onClick={() => setRiddleOpen(true)}
+              title={trophy.claimed ? 'Solved' : 'Inspect'}
+              aria-label={trophy.claimed ? 'Solved riddle trophy' : 'Inspect riddle trophy'}
+            >
+              <TrophyIcon claimed={trophy.claimed} />
+            </button>
+          )}
           <p className="scene-area">{view.scene.area}</p>
           <h2 className="scene-title">{view.scene.title}</h2>
 
@@ -64,7 +82,7 @@ export default function GameScreen({ game }) {
           {typed && !ending && (
             <ChoiceList
               choices={view.choices}
-              disabled={busy}
+              disabled={busy || riddleOpen}
               onChoose={choose}
               detectiveHint={view.detectiveHint}
             />
@@ -73,6 +91,7 @@ export default function GameScreen({ game }) {
           {typed && ending && (
             <div className={`ending ${ending.died ? 'died' : ''}`}>
               <h3>{ending.title}</h3>
+              {ending.epilogue && <p className="epilogue">{ending.epilogue}</p>}
               <div className="row">
                 <button className="btn primary" onClick={() => start(view.name)} disabled={busy}>
                   OPEN A NEW CASE
@@ -86,6 +105,9 @@ export default function GameScreen({ game }) {
         </div>
       </main>
 
+      {riddleOpen && trophy && (
+        <RiddleModal riddleId={trophy.riddleId} getRiddle={getRiddle} answerRiddle={answerRiddle} onClose={() => setRiddleOpen(false)} />
+      )}
       <SidePanel hud={view.hud} onUse={useItem} busy={busy} open={panelOpen} onClose={() => setPanelOpen(false)} />
     </div>
   );

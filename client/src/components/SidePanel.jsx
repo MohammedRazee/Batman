@@ -1,5 +1,12 @@
 import { useState } from 'react';
 
+const entry = (j) => (
+  <li key={j.id} className="entry">
+    <strong>{j.title}</strong>
+    <p>{j.text}</p>
+  </li>
+);
+
 export default function SidePanel({ hud, onUse, busy, open, onClose }) {
   const [tab, setTab] = useState('gear');
   return (
@@ -36,12 +43,9 @@ export default function SidePanel({ hud, onUse, busy, open, onClose }) {
       {tab === 'journal' && (
         <ul className="list">
           {hud.journal.length === 0 && <li className="empty">Nothing recorded yet. Pay attention.</li>}
-          {[...hud.journal].reverse().map((j) => (
-            <li key={j.id} className="entry">
-              <strong>{j.title}</strong>
-              <p>{j.text}</p>
-            </li>
-          ))}
+          {[...hud.journal].reverse().filter((j) => j.section !== 'enigma').map(entry)}
+          {hud.journal.some((j) => j.section === 'enigma') && <li className="section-head">ENIGMA ARCHIVE</li>}
+          {hud.journal.filter((j) => j.section === 'enigma').map(entry)}
         </ul>
       )}
     </aside>

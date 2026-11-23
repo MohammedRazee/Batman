@@ -23,6 +23,9 @@ export default function HUD({ view, onToggleDetective, onTogglePanel, panelOpen,
       <Meter label="HEALTH" value={hud.health} kind="health" />
       <Meter label="ALERT" value={hud.alert} kind="alert" />
       <div className="hud-buttons">
+        {hud.detectiveMode && (
+          <span className="trophy-count" title="Riddler trophies claimed">◆ {view.trophyProgress.claimed}/{view.trophyProgress.total}</span>
+        )}
         <button
           className={`btn toggle ${hud.detectiveMode ? 'on' : ''}`}
           onClick={onToggleDetective}

@@ -26,5 +26,7 @@ export const gameApi = {
   resume: (id) => request(`/${id}`),
   choose: (id, choiceId) => post(`/${id}/choose`, { choiceId }),
   setDetective: (id, on) => post(`/${id}/detective`, { on }),
+  getRiddle: (id, riddleId) => request(`/${id}/riddle/${riddleId}`),
+  answerRiddle: (id, riddleId, answer) => post(`/${id}/riddle/${riddleId}`, { answer }),
   useItem: (id, itemId) => post(`/${id}/use`, { itemId }),
 };

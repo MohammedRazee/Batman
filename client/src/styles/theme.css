@@ -245,3 +245,47 @@ kbd {
 
 @keyframes blink { 50% { opacity: 0; } }
 @keyframes fade-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+/* ---------- Riddler trophies ---------- */
+:root { --riddle-green: #5dff7a; }
+.scene-stage { position: relative; }
+.trophy {
+  position: absolute; transform: translate(-50%, -50%);
+  min-width: 44px; min-height: 44px; padding: 2px;
+  background: none; border: 0; color: var(--riddle-green);
+  filter: drop-shadow(0 0 6px var(--riddle-green));
+  animation: fade-in 0.8s, trophy-pulse 2.4s ease-in-out infinite;
+  transition: transform 0.15s;
+  z-index: 3;
+}
+.trophy:hover { transform: translate(-50%, calc(-50% - 3px)); }
+.trophy.claimed { color: var(--fg-dim); filter: none; animation: fade-in 0.8s; opacity: 0.7; }
+.trophy-count { color: var(--riddle-green); letter-spacing: 0.12em; align-self: center; }
+.section-head { margin-top: 0.6rem; color: var(--riddle-green); letter-spacing: 0.25em; font-size: 0.8rem; border-top: 1px dashed var(--line); padding-top: 0.8rem; }
+
+.riddle-overlay { position: fixed; inset: 0; z-index: 30; display: flex; align-items: center; justify-content: center; background: rgba(4, 10, 12, 0.82); padding: 1rem; }
+.riddle-modal {
+  width: min(560px, 100%); background: #08161b; border: 1px solid var(--riddle-green);
+  box-shadow: 0 0 24px rgba(93, 255, 122, 0.2); padding: 1.2rem 1.4rem; color: #dcf2f8;
+}
+.riddle-modal.accepted { animation: riddle-flash 0.6s; }
+.riddle-modal.shake { animation: shake 0.4s; }
+.riddle-tag { margin: 0 0 0.8rem; font-size: 0.8rem; letter-spacing: 0.3em; color: var(--riddle-green); }
+.riddle-text { min-height: 5em; margin: 0 0 1rem; }
+.riddle-modal input {
+  width: 100%; background: #040a0c; border: 1px solid #33687a; color: inherit; padding: 0.6em 0.8em; font: inherit;
+}
+.riddle-modal input:focus { border-color: var(--riddle-green); outline: none; }
+.riddle-status { min-height: 1.6em; margin: 0.5rem 0; font-size: 0.85rem; letter-spacing: 0.15em; }
+.riddle-status .bad { color: var(--blood); }
+.riddle-status .ok, .riddle-status.ok { color: var(--riddle-green); }
+.riddle-hint { color: var(--amber); font-size: 0.9rem; margin: 0 0 0.8rem; }
+.epilogue { color: var(--riddle-green); font-style: italic; max-width: 34em; margin: 0 auto 1.2rem; }
+
+@keyframes trophy-pulse { 50% { filter: drop-shadow(0 0 14px var(--riddle-green)); } }
+@keyframes shake { 20%, 60% { transform: translateX(-8px); } 40%, 80% { transform: translateX(8px); } }
+@keyframes riddle-flash { 0% { background: rgba(93, 255, 122, 0.35); } 100% { background: #08161b; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .trophy, .trophy.claimed, .riddle-modal.shake, .riddle-modal.accepted { animation: none; }
+  .trophy { transition: none; }
+}
