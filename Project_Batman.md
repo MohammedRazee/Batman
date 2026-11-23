@@ -2,9 +2,9 @@
 
 > **Purpose of this file.** This is the single source of truth for the project. Planning happens in a Claude chat; building happens in VS Code with Claude Code. Claude Code cannot see the planning chat, so everything it needs is written here.
 >
-> **How to read it.** Sections 1-3 are context and rules. **Section 5 is the work to do now (v2.0).** Section 6 is future work: planning only, do not build it yet.
+> **How to read it.** Sections 1-3 are context and rules. **v2.0 (Section 5) is built and kept as reference.** The next target is Section 6.1 (fear meter): write its design doc first, no code until approved. Section 6 is planning-only.
 
-Last updated: 2026-11-23
+Last updated: 2026-11-23 (v2.0 built; next: fear-meter design doc)
 
 ---
 
@@ -17,28 +17,29 @@ A browser-based text adventure set inside a lockdown Arkham Asylum, an imaginati
 - **Server is authoritative.** The client sends intents (`choiceId`, an answer), never state. All game rules live in the pure `server/services/engine.js`.
 - **Persistence:** local MongoDB (`mongodb://127.0.0.1:27017/arkham_adventure`). Anonymous player ID in `localStorage`, no accounts. Each new game also writes a `PlayLog` document.
 
-### Repo layout (from the v1 build)
+### Repo layout (verified 2026-11-23)
 
 ```
-Batman/            (repo root)
+Batman/            (repo root; scripts: npm run install:all | seed | dev | check | build)
   server/            (ES modules, "type": "module")
     models/        Player.js, Scene.js, PlayLog.js
     controllers/   gameController.js
     routes/        gameRoutes.js
-    services/      engine.js   (conditions, effects, transitions, view model)
-    data/          scenes/*.js (intake, medical, gardens, sewers, mansion=Records Room, finale, endings), items.js, seed.js
+    services/      engine.js   (conditions, effects, transitions, riddles, view model)
+    data/          scenes/*.js (intake, medical, gardens, sewers, mansion = Records Room + Cell Block, finale, endings), items.js, riddles.js, seed.js
     scripts/       checkScenes.js, simulate.js
+    test/          *.test.js   (node:test: riddle normaliser, timed-choice rules)
     server.js
   client/          (Vite + React)
     src/
       views/       TitleScreen, GameScreen
-      components/  Narration, ChoiceList, HUD, SidePanel
-      hooks/       useGame.js
+      components/  Narration, ChoiceList, HUD, SidePanel, TrophyIcon, RiddleModal
+      hooks/       useGame.js, useTimedChoice.js
       api/         gameApi.js
       styles/      theme.css, effects.css
 ```
 
-> Claude Code: this layout is from the plan. **Verify it against the real repo before relying on it**, and tell me about any differences.
+Notes: the Cell Block scene (`cell_01`) lives in `mansion.js`. Docs live in the repo root (`CLAUDE.md`, `Project_Batman.md`, `README.md`); `docs/` does not exist yet.
 
 ### Existing game design (v1, already built)
 
@@ -48,17 +49,28 @@ Batman/            (repo root)
 - **Detective Mode** (key `D`): re-skins the screen, reveals extra text and hidden choices, auto-journals clues. When something is hidden and the mode is off, the UI hints at it.
 - Evidence counter, Case Journal, Gear drawer, typewriter narration (click/space to skip), numbered choices (keys 1-9).
 - Palette: near-black `#0a0c0c`, sickly green `#9fd18b`, amber `#c98b2b`, blood `#a02a2a`. Fonts: Special Elite (headings), Courier Prime (body).
-- `npm run check` validates the scene graph and runs 3000 random playthroughs through the real engine.
+- `npm run check` validates the scene graph, runs the node:test suite and 3000 random playthroughs through the real engine.
 
-### Status
+### Added in v2.0
 
-- **Not yet verified:** the server was only exercised against in-memory fakes (no MongoDB in the build sandbox), and the UI was compiled but never viewed in a browser. **First real run on a machine with MongoDB is the true test.** MongoDB runs in a podman container (`mongodb`, mongo:7.0, port 27017); `server/.env` points at it. Server converted from CommonJS to ES modules (2026-11-23).
+- **Riddler trophies:** 8 riddles (`server/data/riddles.js`), trophies shown in Detective Mode, `T` key, `RiddleModal`, Enigma Archive in the Journal, `◆ n/8` HUD counter, epilogue line on endings when all 8 are claimed. Scenes: intake_02, medical_05, garden_04, sewers_03, cell_01, finale_01 (main path); medical_04 and mansion_02 (off the main path).
+- **Timed choices:** `timed: { seconds, defaultChoice, prompt }` on medical_02 (6s), sewers_02 (5s), cell_01 (6s), finale_02 (8s), finale_03 (8s; a timeout lands the pyrrhic ending). `useTimedChoice` hook (phases idle/counting/resolving/done) and a generic timer in `ChoiceList`, the base for the v4 boss duel. `POST /choose` takes `{ choiceId, timedOut? }`. While a countdown runs, `D`, `I`, `T` and the trophy are locked. Assist setting (normal / x1.5 / off) in the FILE panel, stored in `localStorage` (`arkham.timerScale`).
+
+### Status (2026-11-23)
+
+- **Done and committed:** ESM conversion, docs correction, Feature 1 (trophies), Feature 2 (timed choices). `npm run check` is green. MongoDB runs in a podman container (`mongodb`, mongo:7.0, port 27017); `server/.env` points at it.
+- **User-tested:** trophies work in the browser (core flow: appear in Detective Mode, riddle modal, claiming, journal).
+- **Not yet confirmed in a browser:** the timed-choice UI (countdown bar, tab-switch accuracy, hang/flash animations, locks, assist setting, reload mid-countdown), keyboard-only trophy flow and `prefers-reduced-motion` for both features. Server-side behaviour of both is verified (curl + `npm run check`).
+- **Skipped:** edit-distance-1 riddle matching (stretch goal).
+- **Deviations from the brief:** `checkRiddle(riddle, answer)` has no `player` argument. A solved riddle's recap returns its first accepted answer; unsolved riddles never expose answers. `scene.ending.epilogue.trophies` carries the all-trophies epilogue. `PlayLog` gained `choices[]` and `trophiesSolved`.
+- **Placeholders:** riddles, journal entries, epilogue lines and one `medical_02` sentence carry `TODO(author)` and are placeholders for the author to rewrite.
+- **Next:** Feature 3 (fear meter): write `docs/fear-meter-design.md` (Section 6.1), then wait for approval.
 
 ---
 
 ## 2. Rules for Claude Code
 
-1. **Plain JavaScript.** No TypeScript.
+1. **Plain JavaScript, ES modules.** No TypeScript, no CommonJS (`import`/`export`, `.js` extensions on relative imports in the server).
 2. **Keep MVC.** Game rules go in `services/engine.js` as pure functions (no DB, no `req/res`). Controllers validate, call the engine, persist, respond. The client only renders what the server returns.
 3. **Server authoritative.** Never trust the client for game state. Riddle answers are checked on the server and are **never sent to the client**.
 4. **No raster images or audio files.** Any graphic is inline SVG or CSS.
@@ -75,34 +87,25 @@ Batman/            (repo root)
 
 | # | Feature | Target | Notes |
 |---|---|---|---|
-| 1 | **Riddler trophies** (clickable trophy in Detective Mode, riddle popup) | **v2.0, build now** | Section 5.1 |
-| 2 | **Timed choices** (countdown, gray-out, flash/hang resolution) | **v2.0, build now** | Section 5.2. Built reusable: it is the foundation for #4 |
-| 3 | **Fear meter, Scarecrow sections only** | v3, **plan first** | Section 6.1. Needs a design doc before any code |
+| 1 | **Riddler trophies** (clickable trophy in Detective Mode, riddle popup) | v2.0, **built**, user-tested | Section 5.1 |
+| 2 | **Timed choices** (countdown, gray-out, flash/hang resolution) | v2.0, **built**, UI test pending | Section 5.2. Built reusable: it is the foundation for #4 |
+| 3 | **Fear meter, Scarecrow sections only** | v3, **next: plan first** | Section 6.1. Needs a design doc before any code |
 | 4 | **Boss duel sequence** (Detroit: Become Human style) | v4, future | Section 6.2. Built on top of #2 |
 
-Features 1 and 2 are independent. Recommended order: **1 then 2.** Trophies are additive and low risk; timed choices touch the core choose flow and the check script.
+Features 1 and 2 are done. Next is feature 3, design doc first.
 
 ---
 
 ## 4. Step 0: before any new feature
 
-- [ ] Start a real MongoDB, run `npm run seed`, start server and client.
-- [ ] Play start to finish in a real browser. Fix anything broken (CORS, proxy, fonts, layout, keyboard shortcuts, resume-after-reload).
-- [ ] Commit this baseline (`git init` first if there is no repo) so every later change is easy to diff and revert.
-- [ ] Record what you fixed in the Status section above.
+- [x] Start a real MongoDB, run `npm run seed`, start server and client.
+- [~] (partly done by the user, trophies tested) Play start to finish in a real browser. Fix anything broken (CORS, proxy, fonts, layout, keyboard shortcuts, resume-after-reload).
+- [x] Commit this baseline (`git init` first if there is no repo) so every later change is easy to diff and revert.
+- [x] Record what you fixed in the Status section above (no baseline fixes were needed beyond the ESM conversion).
 
 ---
 
-## Status (2026-11-23)
-
-- **Done:** Step 0 ESM conversion, docs correction, Feature 1 (Riddler trophies) fully built and committed. `npm run check` is green (scene graph, 3 node:test normaliser tests, golden path, 3000 random runs including riddle attempts and an answer-leak assertion). Riddle API verified against the real MongoDB with curl.
-- **Not verified:** the trophy UI has only been compiled (`vite build`), never viewed in a browser. Step 0's browser playthrough is still the user's to do. Trophy x/y positions are untested against real text layout.
-- **Placement:** intake_02, medical_05, garden_04, sewers_03, cell_01, finale_01 (main path); medical_04 (bat, detective-only branch) and mansion_02 (Ledger, file) off the main path.
-- **Feature 2 (timed choices) built, UI untested in a browser.** Timed scenes: medical_02 (6s), sewers_02 (5s), cell_01 (6s), finale_02 (8s), finale_03 (8s, a timeout lands the pyrrhic ending). Assist setting (normal / x1.5 / off) is in the FILE panel. Server rejections and the check/simulate timeout paths are verified (curl + `npm run check`); the countdown, hang/flash animations, tab-switch accuracy and reduced-motion are for the user to test. Trophy button, `T`, `D` and `I` are locked while a countdown runs.
-- **Skipped:** edit-distance-1 answer matching (stretch).
-- **Deviation:** `checkRiddle(riddle, answer)` has no `player` argument (unused). A solved riddle's recap returns its first accepted answer; unsolved riddles never do.
-
-## 5. v2.0 scope (build now)
+## 5. v2.0 scope (BUILT, kept as reference)
 
 ### 5.1 Feature 1: Riddler trophies
 
@@ -178,10 +181,10 @@ trophy: { riddleId: 'tr_intake_clock', x: 72, y: 38 }   // x/y in % of .scene-st
 **Placement rules.** Claude Code picks the actual scenes. No two trophies in one scene. None in the ambush, death or ending scenes. At least two must sit **off the main path** (behind a branch) to reward exploring. The riddle should relate to something in the scene where possible.
 
 **Acceptance criteria**
-- [ ] Trophy appears only in Detective Mode; the hint appears when the mode is off and a trophy is unclaimed.
-- [ ] Clicking opens the modal; correct answer claims it, wrong answers show feedback, and the hint shows after 2 wrong attempts.
+- [x] Trophy appears only in Detective Mode; the hint appears when the mode is off and a trophy is unclaimed.
+- [x] Clicking opens the modal; correct answer claims it, wrong answers show feedback, and the hint shows after 2 wrong attempts.
 - [x] Answers never appear in any API response. Opening a riddle outside its scene or outside Detective Mode is rejected.
-- [ ] Claimed state, tries and journal entries survive a page reload.
+- [x] Claimed state, tries and journal entries survive a page reload.
 - [ ] Works with keyboard only (Tab, `T`, `Enter`, `Esc`) and under `prefers-reduced-motion`.
 - [x] `npm run check` additionally validates: every `trophy.riddleId` exists, every riddle is used exactly once, trophy scenes exist and none is an ambush/death/ending scene, and trophy x/y are in 0-100.
 - [x] Unit tests for the answer normaliser (case, punctuation, articles, plurals, aliases).
@@ -299,21 +302,12 @@ Use it in **3-5 set pieces** total: for example a collapsing walkway in the Medi
 | 2026-11-23 | Trophy art is an original inline SVG, not a raster image. All riddles are original text. |
 | 2026-11-23 | Timed-choice resolution: no screen cut; others gray out, picked choice hangs (about 1.1s), timeout flashes the default (about 1.5s total). |
 | 2026-11-23 | Trophy rewards stay cosmetic (journal, counter, epilogue line). |
+| 2026-11-23 | Repo root is `Batman/`. Server converted to ES modules. MongoDB runs in podman. Tests use `node:test`. |
+| 2026-11-23 | Timed scenes: medical_02, sewers_02, cell_01, finale_02, finale_03. Assist setting (normal / x1.5 / off) included. |
+| 2026-11-23 | `CLAUDE.md` and `Project_Batman.md` are tracked in git; `.gitignore` follows normal Node standards. |
 
 ---
 
-## 8. Appendix: starter `CLAUDE.md`
+## 8. Appendix: CLAUDE.md
 
-Put this in the repo root as `CLAUDE.md` (Claude Code loads it automatically at the start of every session):
-
-```markdown
-# Arkham Text Adventure
-
-Read `Project_Batman.md` first: it is the source of truth for scope, rules and status.
-
-- MERN + MVC, plain JavaScript. Server is authoritative; engine in `server/services/engine.js` stays pure.
-- No raster images or audio. Inline SVG/CSS only.
-- Run `npm run check` after any scene, engine or schema change. It must stay green.
-- Only build what Section 5 of Project_Batman.md says. Section 6 is planning-only.
-- When a feature is finished, update the Status section and tick the acceptance boxes in Project_Batman.md.
-```
+The real `CLAUDE.md` lives in the repo root and is loaded automatically at the start of every Claude Code session. Edit that file, not a copy here.
