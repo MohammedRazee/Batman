@@ -7,12 +7,14 @@ export default function App() {
   const detective = game.view?.hud.detectiveMode;
   const lowHealth = game.view && game.view.hud.health <= 30;
   const highAlert = game.view && game.view.hud.alert >= 70;
+  const fear = game.view?.fear;
 
   const classes = [
     'app',
     detective ? 'detective' : '',
     lowHealth ? 'low-health' : '',
     highAlert ? 'high-alert' : '',
+    fear ? `fear fear-${fear.tier}` : '',
   ].join(' ');
 
   return (

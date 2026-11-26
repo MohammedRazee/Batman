@@ -39,7 +39,7 @@ export default function ChoiceList({ choices, disabled, onChoose, detectiveHint,
       {choices.map((c, i) => (
         <button
           key={c.id}
-          className={`choice ${c.locked ? 'locked' : ''} ${c.detective ? 'detective-choice' : ''} ${stateClass(c)}`}
+          className={`choice ${c.locked ? 'locked' : ''} ${c.detective ? 'detective-choice' : ''} ${c.lie ? 'choice--lie' : ''} ${stateClass(c)}`}
           disabled={disabled || c.locked}
           onClick={() => onChoose(c.id)}
         >
@@ -48,6 +48,7 @@ export default function ChoiceList({ choices, disabled, onChoose, detectiveHint,
             {c.label}
             {c.locked && <em className="reason"> // {c.reason}</em>}
           </span>
+          {c.lie && <span className="choice-tag--lie" title="Detective Mode: this choice is not what it seems">FALSE</span>}
           {resolving && resolving.kind === 'timeout' && c.id === resolving.choiceId && (
             <span className="choice-tag--no-response">NO RESPONSE: DEFAULT</span>
           )}

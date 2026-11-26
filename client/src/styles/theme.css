@@ -238,7 +238,7 @@ kbd {
 
 @media (max-width: 760px) {
   body { font-size: 16px; }
-  .hud { grid-template-columns: 1fr 1fr; }
+  .hud, .hud.hud--fear { grid-template-columns: 1fr 1fr; }
   .hud-loc, .hud-buttons { grid-column: 1 / -1; }
   .hud-buttons { justify-content: space-between; }
 }
@@ -323,3 +323,16 @@ kbd {
   .choice--default-flash { background: rgba(240, 98, 90, 0.3); }
   .timer-fill, .choice--dimmed { transition: none; }
 }
+
+/* ---------- Fear meter (Scarecrow sections only) ---------- */
+:root { --fear: #b98be0; }
+.hud.hud--fear { grid-template-columns: 1.2fr 1fr 1fr 1fr auto; }
+.meter.fear { animation: fade-in 0.6s ease-out; transition: opacity 0.6s; }
+.meter.fear.meter--leaving { opacity: 0; }
+.meter.fear .meter-fill { background: var(--fear); }
+.meter.fear.fear-terrified .meter-fill { background: var(--blood); }
+.meter-note { font-style: normal; letter-spacing: 0.12em; color: var(--fear); }
+.meter.fear-terrified .meter-note { color: var(--blood); }
+.choice.choice--lie { border-color: var(--blood); border-style: dashed; }
+.choice-tag--lie { margin-left: auto; font-size: 0.75rem; letter-spacing: 0.2em; color: var(--blood); white-space: nowrap; }
+
