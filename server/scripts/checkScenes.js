@@ -3,7 +3,7 @@ import scenes from '../data/scenes/index.js';
 import ITEMS from '../data/items.js';
 import { riddles } from '../data/riddles.js';
 
-const EFFECTS = new Set(['health', 'alert', 'setAlert', 'addItem', 'removeItem', 'flag', 'inc', 'journal']);
+const EFFECTS = new Set(['health', 'alert', 'setAlert', 'fear', 'setFear', 'addItem', 'removeItem', 'flag', 'inc', 'journal']);
 const byId = new Map();
 const errors = [];
 const warn = [];
@@ -54,6 +54,22 @@ for (const s of scenes) {
   if (s.ending || s.id.startsWith('garden_')) errors.push(`${s.id}: timed not allowed here`);
 }
 
+const TIER_NAMES = ['calm', 'uneasy', 'terrified'];
+if (!byId.get('garden_nightmare')?.fear) errors.push('garden_nightmare must exist and be a fear scene');
+for (const s of scenes) {
+  const hasFearEffect = [...(s.onEnter || []), ...(s.choices || []).flatMap((c) => c.effects || [])].some((e) => e.type === 'fear' || e.type === 'setFear');
+  const hasLies = (s.choices || []).some((c) => c.lies);
+  if (!s.fear && (s.fearText || hasLies || hasFearEffect)) errors.push(`${s.id}: fear features on a scene that is not fear: true`);
+  if (s.fear && s.timed) errors.push(`${s.id}: fear scenes cannot be timed`);
+  if (s.fear && s.ending) errors.push(`${s.id}: fear scene cannot be an ending`);
+  for (const k of Object.keys(s.fearText || {})) if (!TIER_NAMES.includes(k) || k === 'calm') errors.push(`${s.id}: fearText key "${k}" must be uneasy or terrified`);
+  (s.choices || []).forEach((c, i) => {
+    if (!c.lies) return;
+    if (!byId.has(c.lies.actualGoto)) errors.push(`${s.id}.c${i}: lies.actualGoto "${c.lies.actualGoto}" does not exist`);
+    if (!TIER_NAMES.includes(c.lies.minTier) || c.lies.minTier === 'calm') errors.push(`${s.id}.c${i}: lies.minTier must be uneasy or terrified`);
+  });
+}
+
 const usedRiddles = new Map();
 for (const s of scenes) {
   if (!s.trophy) continue;
@@ -69,15 +85,17 @@ for (const id of Object.keys(riddles)) if (!usedRiddles.has(id)) errors.push(`ri
 for (const f of usedFlags) if (!setFlags.has(f)) errors.push(`flag "${f}" is checked but never set`);
 
 // reachability from the start (ambush and game_over are engine-routed)
-const seen = new Set(['intake_01', 'ambush', 'game_over']);
-const stack = ['intake_01', 'ambush'];
+const seen = new Set(['intake_01', 'ambush', 'game_over', 'garden_nightmare']);
+const stack = ['intake_01', 'ambush', 'garden_nightmare'];
 while (stack.length) {
   const s = byId.get(stack.pop());
   if (!s) continue;
   for (const c of s.choices || []) {
-    if (c.goto !== '__return' && !seen.has(c.goto)) {
-      seen.add(c.goto);
-      stack.push(c.goto);
+    for (const t of [c.goto, c.lies?.actualGoto]) {
+      if (t && t !== '__return' && !seen.has(t)) {
+        seen.add(t);
+        stack.push(t);
+      }
     }
   }
 }

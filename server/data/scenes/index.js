@@ -6,7 +6,7 @@ import mansion from './mansion.js';
 import finale from './finale.js';
 import endings from './endings.js';
 
-export default [
+const all = [
   ...intake,
   ...medical,
   ...gardens,
@@ -15,3 +15,6 @@ export default [
   ...finale,
   ...endings,
 ];
+
+// Every Botanical Gardens scene is a fear section.
+export default all.map((sc) => (sc.area === 'Botanical Gardens' ? { ...sc, fear: true } : sc));

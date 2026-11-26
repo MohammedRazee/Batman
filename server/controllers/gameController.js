@@ -106,7 +106,10 @@ export const toggleDetective = async (req, res) => {
   const on = req.body && typeof req.body.on === 'boolean' ? req.body.on : !player.detectiveMode;
   player.detectiveMode = on;
   const scene = await getScene(player.scene);
-  if (!scene.ending) engine.collectClue(player, scene);
+  if (!scene.ending) {
+    engine.collectClue(player, scene);
+    engine.unmaskLies(player, scene);
+  }
   await persist(player);
   res.json(engine.buildView(player, scene));
 };

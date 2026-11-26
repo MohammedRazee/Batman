@@ -8,6 +8,7 @@ const choiceSchema = new mongoose.Schema(
     requires: { type: mongoose.Schema.Types.Mixed, default: undefined },
     hideIf: { type: mongoose.Schema.Types.Mixed, default: undefined },
     detective: { type: Boolean, default: false },
+    lies: { type: mongoose.Schema.Types.Mixed, default: undefined },
     effects: { type: [mongoose.Schema.Types.Mixed], default: [] },
   },
   { _id: false }
@@ -19,6 +20,8 @@ const sceneSchema = new mongoose.Schema({
   title: { type: String, required: true },
   text: { type: String, required: true },
   detectiveText: String,
+  fear: { type: Boolean, default: false },
+  fearText: { type: mongoose.Schema.Types.Mixed, default: undefined },
   timed: { type: mongoose.Schema.Types.Mixed, default: undefined },
   trophy: { type: mongoose.Schema.Types.Mixed, default: undefined },
   clue: { type: mongoose.Schema.Types.Mixed, default: undefined },

@@ -6,6 +6,7 @@ const playerSchema = new mongoose.Schema(
     scene: { type: String, required: true },
     health: { type: Number, default: 100 },
     alert: { type: Number, default: 0 },
+    fear: { type: Number, default: 0 },
     inventory: { type: [String], default: [] },
     flags: { type: mongoose.Schema.Types.Mixed, default: {} },
     journal: {

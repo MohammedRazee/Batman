@@ -13,6 +13,7 @@ const newPlayer = () => ({
   scene: 'intake_01',
   health: 100,
   alert: 0,
+  fear: 0,
   inventory: ['batarang'],
   flags: {},
   journal: [],
@@ -84,6 +85,7 @@ async function golden() {
   await go('Cut the wires');
   if (s.ending?.id !== 'justice') throw new Error(`golden path ended in ${s.id}`);
   if (!p.over) throw new Error('player not marked over');
+  if (p.flags.shaken !== false || p.flags.lucid !== true) throw new Error('golden path should leave the gardens lucid');
   console.log(`[sim] golden path OK  health=${p.health} alert=${p.alert} evidence=${p.flags.evidence} journal=${p.journal.length}`);
 }
 
@@ -101,6 +103,8 @@ async function randomRuns(n) {
   const endings = {};
   const unseen = new Set(scenes.map((s) => s.id));
   let maxSteps = 0;
+  let diverted = 0;
+  let lied = 0;
   for (let i = 0; i < n; i++) {
     const rand = rng(i + 1);
     const { p, scene } = await start();
@@ -131,15 +135,24 @@ async function randomRuns(n) {
       } else if (!engine.resolveChoice(p, s, pick.id, true).error) throw new Error(`timedOut accepted on untimed ${s.id}`);
       const r = engine.resolveChoice(p, s, choiceId, timedOut);
       if (r.error) throw new Error(`run ${i}: ${s.id} offered ${pick.id} but resolve said ${r.error}`);
+      const authored = s.choices[Number(choiceId.slice(1))];
+      if (authored.lies && r.target === authored.lies.actualGoto && r.target !== authored.goto) lied++;
       s = await engine.enterScene(p, r.target, getScene);
       unseen.delete(s.id);
-      if (p.health < 0 || p.health > 100 || p.alert < 0 || p.alert > 100) throw new Error('meter out of range');
+      if (s.id === 'garden_nightmare') diverted++;
+      const inFear = !!s.fear;
+      if (inFear !== (engine.buildView(p, s).fear !== null)) throw new Error(`fear view mismatch at ${s.id}`);
+      if (!inFear && (p.fear !== 0 || p.flags.fearPeak !== undefined)) throw new Error(`fear leaked outside a fear section at ${s.id}`);
+      if (p.health < 0 || p.health > 100 || p.alert < 0 || p.alert > 100 || p.fear < 0 || p.fear > 100) throw new Error('meter out of range');
     }
     maxSteps = Math.max(maxSteps, steps);
     endings[s.ending.id] = (endings[s.ending.id] || 0) + 1;
   }
   console.log(`[sim] ${n} random runs OK, longest=${maxSteps} steps, endings:`, endings);
   const hide = new Set(['ambush']);
+  if (!diverted) throw new Error('no run reached the fear diversion');
+  if (!lied) throw new Error('no run triggered a lying choice');
+  console.log(`[sim] fear: ${diverted} nightmare diversions, ${lied} lies resolved`);
   const never = [...unseen].filter((x) => !hide.has(x));
   if (never.length) console.log('[sim] scenes never reached by random play:', never.join(', '));
 }

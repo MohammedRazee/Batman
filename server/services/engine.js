@@ -5,6 +5,34 @@ import { riddles } from '../data/riddles.js';
 
 const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
 
+/* ---------- fear (Scarecrow sections only) ---------- */
+
+const TIERS = ['calm', 'uneasy', 'terrified'];
+export const fearTier = (v) => (v >= 67 ? 'terrified' : v >= 34 ? 'uneasy' : 'calm');
+const isFear = (scene) => !!scene && !!scene.fear;
+
+// A lying choice is active once the player's fear tier reaches lies.minTier.
+const lieActive = (player, choice) =>
+  !!choice.lies && TIERS.indexOf(fearTier(player.fear || 0)) >= TIERS.indexOf(choice.lies.minTier);
+
+// Calm text is the baseline; a missing tier falls back to the nearest lower one.
+function sceneText(player, scene) {
+  if (!isFear(scene) || !scene.fearText) return scene.text;
+  const tier = fearTier(player.fear || 0);
+  if (tier === 'terrified') return scene.fearText.terrified || scene.fearText.uneasy || scene.text;
+  if (tier === 'uneasy') return scene.fearText.uneasy || scene.text;
+  return scene.text;
+}
+
+// Detective Mode unmasks active lies for +5 Alert, once per scene.
+export function unmaskLies(player, scene) {
+  if (!player.detectiveMode || !isFear(scene)) return;
+  const key = `unmasked:${scene.id}`;
+  if (player.flags[key] || !(scene.choices || []).some((c) => lieActive(player, c))) return;
+  player.flags[key] = true;
+  player.alert = clamp(player.alert + 5, 0, 100);
+}
+
 /* ---------- requirements ---------- */
 
 function itemName(id) {
@@ -54,6 +82,7 @@ function listChoices(player, scene) {
       locked: !gate.ok,
       reason: gate.ok ? null : gate.reason,
       detective: !!choice.detective,
+      lie: player.detectiveMode && lieActive(player, choice),
     });
   });
   return { choices: out, detectiveHidden };
@@ -78,6 +107,11 @@ function applyEffects(player, effects) {
         break;
       case 'setAlert':
         player.alert = clamp(e.value, 0, 100);
+        break;
+      case 'fear':
+      case 'setFear':
+        player.fear = clamp(e.type === 'fear' ? (player.fear || 0) + e.delta : e.value, 0, 100);
+        player.flags.fearPeak = Math.max(player.flags.fearPeak || 0, player.fear);
         break;
       case 'addItem':
         if (!player.inventory.includes(e.item)) player.inventory.push(e.item);
@@ -120,6 +154,15 @@ async function enterScene(player, sceneId, getScene, depth = 0) {
   if (first) player.visited.push(scene.id);
   if (first || scene.repeat) applyEffects(player, scene.onEnter);
 
+  // Leaving a fear section: reset the meter, leave one lasting flag for the epilogue.
+  if (!isFear(scene) && player.flags.fearPeak !== undefined) {
+    const shaken = player.flags.fearPeak >= 67;
+    player.flags.shaken = shaken;
+    player.flags.lucid = !shaken;
+    delete player.flags.fearPeak;
+    player.fear = 0;
+  }
+
   if (scene.ending) {
     player.over = true;
     return scene;
@@ -131,7 +174,12 @@ async function enterScene(player, sceneId, getScene, depth = 0) {
     player.returnTo = scene.id;
     return enterScene(player, 'ambush', getScene, depth + 1);
   }
+  if (isFear(scene) && player.fear >= 100 && depth === 0) {
+    player.returnTo = scene.id;
+    return enterScene(player, 'garden_nightmare', getScene, depth + 1);
+  }
   collectClue(player, scene);
+  unmaskLies(player, scene);
   return scene;
 }
 
@@ -147,8 +195,9 @@ function resolveChoice(player, scene, choiceId, timedOut = false) {
   if (choice.detective && !player.detectiveMode) return { error: 'Nothing like that here.' };
   const gate = checkRequires(player, choice.requires);
   if (!gate.ok) return { error: gate.reason };
+  const target = lieActive(player, choice) ? choice.lies.actualGoto : choice.goto;
   applyEffects(player, choice.effects);
-  return { target: choice.goto };
+  return { target };
 }
 
 function useItem(player, itemId) {
@@ -235,12 +284,13 @@ function buildView(player, scene, extra = {}) {
       id: scene.id,
       area: scene.area,
       title: scene.title,
-      text: withName(player, scene.text),
+      text: withName(player, sceneText(player, scene)),
       trophy: detective && scene.trophy ? { ...scene.trophy, claimed } : null,
       detectiveText: detective ? withName(player, scene.detectiveText) || null : null,
     },
     choices: scene.ending ? [] : choices,
     timed: scene.timed && !scene.ending ? { seconds: scene.timed.seconds, defaultChoiceId: `c${scene.timed.defaultChoice}`, prompt: scene.timed.prompt } : null,
+    fear: isFear(scene) ? { value: player.fear || 0, tier: fearTier(player.fear || 0) } : null,
     detectiveHint: !detective && (detectiveHidden > 0 || !!scene.detectiveText || hasHiddenTrophy),
     hasHiddenTrophy,
     trophyProgress: { claimed: player.trophies.length, total: TROPHY_TOTAL },
