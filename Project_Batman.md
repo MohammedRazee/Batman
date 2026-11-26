@@ -6,7 +6,7 @@
 >
 > **Owners.** Chat side: roadmap, decisions, design, briefs. Claude Code: Status, Contracts, deviations. Update your own sections; if you must change the other side's, say so in the Decisions log.
 
-Last updated: 2026-11-26 (v2.0 built; next: fear-meter design doc)
+Last updated: 2026-11-26 (v3 fear meter built and shipped as a tester; user browser test in progress)
 
 ---
 
@@ -23,7 +23,7 @@ A browser-based text adventure set inside a lockdown Arkham Asylum. No raster im
 
 ## 2. Status (2026-11-26)
 
-**Done and committed:** ESM conversion, docs correction, Feature 1 (Riddler trophies), Feature 2 (timed choices). `npm run check` is green. MongoDB runs in a podman container (`mongodb`, mongo:7.0, port 27017); `server/.env` points at it.
+**Done:** ESM conversion, docs correction, Feature 1 (Riddler trophies), Feature 2 (timed choices), Feature 3 (fear meter, tester scope: Botanical Gardens only; marked built and shipped by the author 2026-11-26). `npm run check` is green. MongoDB runs in a podman container (`mongodb`, mongo:7.0, port 27017); `server/.env` points at it.
 
 **User-tested:** trophy core flow in the browser (appear in Detective Mode, riddle modal, claiming, journal).
 
@@ -31,6 +31,7 @@ A browser-based text adventure set inside a lockdown Arkham Asylum. No raster im
 - [ ] Timed-choice UI: countdown bar, tab-switch accuracy, hang/flash animations, input locks, assist setting, reload mid-countdown.
 - [ ] Keyboard-only trophy flow (Tab, `T`, `Enter`, `Esc`).
 - [ ] `prefers-reduced-motion` for both features.
+- [ ] Fear meter in the browser (author testing): meter fade in/out, tier text and CSS, `FALSE` tag on lies, nightmare diversion, exit, reduced motion. Run `npm run seed` first.
 - Server-side behaviour of both features is verified (curl + `npm run check`).
 
 **Skipped:** edit-distance-1 riddle matching (stretch goal).
@@ -43,7 +44,17 @@ A browser-based text adventure set inside a lockdown Arkham Asylum. No raster im
 
 **Placeholders:** riddles, journal entries, epilogue lines and one `medical_02` sentence carry `TODO(author)`. The author rewrites them.
 
-**Next:** Feature 3 (fear meter): write `docs/features/fear-meter-design.md` (Section 5), then wait for approval. No code before approval.
+**Feature 3 (fear meter), built** in three phases; `npm run check` green, client builds clean. Design: `docs/features/fear-meter-design.md`.
+- Engine: `fear`/`setFear` effects, tiers (calm <34, uneasy 34-66, terrified 67+), `fearText` with downward fallback, `lies` resolved server-side, max-fear diversion to `garden_nightmare` (like ambush, via `returnTo`), exit resets fear and sets `lucid` or `shaken`. Detective unmask costs +5 Alert once per scene (`unmaskLies`, from `enterScene` and `toggleDetective`). All Botanical Gardens scenes get `fear: true` in `scenes/index.js`.
+- Content: fear effects on all four garden scenes; `fearText` on `garden_02`/`garden_03`; lies on `garden_02` ("Take the door marked GREENHOUSE", uneasy) and `garden_03` ("Walk straight through it", terrified). New prose is `TODO(author)`. Random-play deaths rose from about 3.6% to 5.4%.
+- Client: FEAR meter with tier label (fades in/out), tier CSS on the narration, `FALSE` tag on unmasked lies, reduced motion respected.
+- Tests: `server/test/fear.test.js`; `checkScenes` validates fear fields; `simulate` requires diversions and lies to fire and checks fear never leaks outside the gardens.
+
+**Deviations from the fear design doc:**
+- An unmasked lie carries `lie: true` only, not the true destination's title (`listChoices` is sync).
+- The finale epilogue does not read `lucid`/`shaken` yet; the flags are set but unused. Acceptance box left open.
+
+**Next:** author feedback on the fear meter, if any. Otherwise Feature 4 (boss duel): design doc only, see Section 6.
 
 ---
 
@@ -53,7 +64,8 @@ A browser-based text adventure set inside a lockdown Arkham Asylum. No raster im
 |---|---|---|---|---|
 | 1 | Riddler trophies | v2.0 | Built, user-tested | `docs/archive/v2-brief.md` (5.1) |
 | 2 | Timed choices | v2.0 | Built, UI test pending. Foundation for #4 | `docs/archive/v2-brief.md` (5.2) |
-| 3 | Fear meter, Scarecrow sections only | v3 | Next: design doc first | Section 5 below |
+| 3 | Fear meter, Scarecrow sections only | v3 | Built and shipped (tester: Botanical Gardens only); author testing | `docs/features/fear-meter-design.md` |
+| 3b | Fear meter expansion into more scenes | Future | Idea only. See design doc §8 | `docs/features/fear-meter-design.md` |
 | 4 | Boss duel sequence (Detroit: Become Human style) | v4 | Future | Section 6 below |
 
 ---
@@ -87,10 +99,13 @@ Riddle answers are never in any response.
   onEnter: [{ type: 'alert', delta: 5 }],   // first visit only unless repeat: true
   trophy: { riddleId, x, y },               // x/y in % of .scene-stage
   timed: { seconds, defaultChoice, prompt },// defaultChoice = index, no `requires`; seconds 3-15
+  fear: true,                               // fear section (all Botanical Gardens scenes get it automatically)
+  fearText: { uneasy, terrified },          // optional tier overrides of `text`, fear scenes only
   choices: [
     { label: '...', goto: 'medical_02', requires: { item: 'grapnel' } },
     { label: '...', goto: 'medical_03', effects: [{ type: 'alert', delta: 15 }] },
     { label: '...', goto: 'medical_04', detective: true },
+    { label: '...', goto: 'a', lies: { actualGoto: 'b', minTier: 'uneasy' } }, // fear scenes only
   ],
 }
 ```
@@ -99,17 +114,19 @@ Choice ids are positional (`c0`, `c1`, ...), never authored. Any new scene field
 
 ### Models
 
-- **Player:** name, scene, health, alert, inventory[], flags{}, journal[], visited[], detectiveMode, over, trophies[], riddleTries (Mixed).
+- **Player:** name, scene, health, alert, fear, inventory[], flags{}, journal[], visited[], detectiveMode, over, trophies[], riddleTries (Mixed).
 - **Scene:** mirrors the scene data shape above.
 - **PlayLog:** name, start/end, outcome, ending, choices[] (with `timedOut`), last scene, trophiesSolved.
 
 ### View model additions
 
-`trophy: { riddleId, x, y, claimed }` (Detective Mode on), `hasHiddenTrophy` (mode off, unclaimed), `trophyProgress: { claimed, total }`, `timed: { seconds, defaultChoiceId, prompt }` or `null`.
+`trophy: { riddleId, x, y, claimed }` (Detective Mode on), `hasHiddenTrophy` (mode off, unclaimed), `trophyProgress: { claimed, total }`, `timed: { seconds, defaultChoiceId, prompt }` or `null`, `fear: { value, tier }` or `null` (fear scenes only), `choices[].lie` (Detective Mode, active lie). Effects `fear {delta}` and `setFear {value}`; flags `shaken`/`lucid` set on leaving a fear section.
 
 ---
 
-## 5. Active brief: Feature 3, Fear meter, Scarecrow sections only (v3)
+## 5. Brief: Feature 3, Fear meter, Scarecrow sections only (v3)
+
+> **Built.** Answers and final design: `docs/features/fear-meter-design.md`. Kept for reference.
 
 **Planning only. Do not implement.** First task: write `docs/features/fear-meter-design.md` that settles the open questions below, then wait for approval.
 
@@ -160,3 +177,6 @@ Choice ids are positional (`c0`, `c1`, ...), never authored. Any new scene field
 | 2026-11-26 | Docs split: rules and commands in `CLAUDE.md`; design in `docs/design.md`; briefs in `docs/features/` and `docs/archive/`; this file holds status, roadmap, decisions and contracts. Master copy is in the repo; the Claude Project copy is a snapshot that is re-uploaded after build sessions. |
 | 2026-11-26 | v2.0 brief archived to `docs/archive/v2-brief.md`. Open v2 checks moved into Section 2. |
 | 2026-11-26 | `ponytail` skill is used for all coding tasks (via `CLAUDE.md`); the brief's rules and acceptance criteria count as asked-for. |
+| 2026-11-26 | Fear meter design doc written (`docs/features/fear-meter-design.md`): mechanics A, B, C (CSS only), E in; D out. Awaiting approval. |
+| 2026-11-26 | Fear unmask cost confirmed at +5 Alert. v3 fear meter is a tester limited to the Botanical Gardens; it will be expanded into additional scenes in a future version (roadmap 3b, design doc §8). |
+| 2026-11-26 | Fear meter marked built and shipped by the author; browser testing continues and feedback comes later. Claude Code edited the Roadmap row and added a Built note to Section 5 (chat-side sections). |
